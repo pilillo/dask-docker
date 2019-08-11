@@ -20,6 +20,14 @@ services:
     hostname: dask-worker
     command: ["dask-worker", "tcp://scheduler:8786"]
 
+  cuda-worker:
+    build:
+      context: ./gpu
+      dockerfile: Dockerfile
+    image: daskdev/dask-gpu
+    hostname: dask-cuda-worker
+    command: ["dask-cuda-worker", "tcp://scheduler:8786"]
+
   notebook:
     build:
       context: ./notebook

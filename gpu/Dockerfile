@@ -46,6 +46,7 @@ RUN conda install --yes --freeze-installed \
     # packages for rapidsai and cudf
     && conda install --yes --freeze-installed \
     -c nvidia -c rapidsai -c numba -c conda-forge -c pytorch -c defaults \
+    numba=0.45.1 \
     cudf=0.8 \
     cuml=0.8 \
     cugraph=0.8 \
@@ -54,7 +55,7 @@ RUN conda install --yes --freeze-installed \
     # dask wrappers
     && conda install --yes --freeze-installed \
     -c rapidsai \
-    dask-cuda=0.6.0 \
+    dask-cuda=0.8.0 \
     dask-cudf=0.8.0 \
     # cleanup   
     && conda clean -tipsy \
