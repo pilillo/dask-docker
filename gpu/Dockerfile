@@ -11,14 +11,12 @@ ENV PATH $CONDA_DIR/bin:$PATH
 
 ENV MINICONDA_VERSION $MINICONDA_VERSION
 
-RUN apt-get update && apt-get install -yq --no-install-recommends \
-    apt-transport-https \
+RUN apt-get update; apt-get install -yq --no-install-recommends \
     ca-certificates \
+    apt-transport-https \
     wget \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-RUN [ ! -z http_proxy ] && echo -e "proxy_servers:\n  http: $http_proxy\n  https: $https_proxy\nssl_verify: False\n" > $HOME/.condarc
 
 RUN cd /tmp && \
     mkdir -p $CONDA_DIR && \
