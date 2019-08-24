@@ -1,6 +1,28 @@
-FROM nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04
-
+ARG PYTHON_VERSION=3.7
+ARG CUDA_VERSION=10.0
+ARG OS_TYPE=ubuntu18.04
 ARG MINICONDA_VERSION=4.6.14
+ARG DASK_VERSION=">2.2.0"
+ARG NUMPY_VERSION=1.16.2
+ARG PANDAS_VERSION=0.24.2
+ARG XGBOOST_VERSION=0.90
+ARG NUMBA_VERSION=0.45.1
+ARG RAPIDS_CONDA_VERSION_SPEC=0.9*
+
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-runtime-${OS_TYPE} as base
+
+ARG PYTHON_VERSION
+ARG MINICONDA_VERSION
+ARG CUDA_VERSION
+ARG OS_TYPE
+ARG DASK_VERSION
+ARG PANDAS_VERSION
+ARG NUMPY_VERSION
+ARG XGBOOST_VERSION
+ARG NUMBA_VERSION
+ARG RAPIDS_CONDA_VERSION_SPEC
+
+
 
 USER root
 
@@ -48,25 +70,24 @@ RUN conda install --yes --freeze-installed \
     -c conda-forge \
     python-blosc \
     cytoolz \
-    dask==2.0.0 \
+    dask=${DASK_VERSION} \
     nomkl \
-    numpy==1.16.2 \
-    pandas==0.24.2 \
+    numpy=${NUMPY_VERSION} \
+    pandas=${PANDAS_VERSION} \
     tini==0.18.0 \
     # packages for rapidsai and cudf
     && conda install --yes --freeze-installed \
     -c nvidia -c rapidsai -c numba -c conda-forge -c pytorch -c defaults \
     numba=0.45.1 \
-    cudf=0.8 \
-    cuml=0.8 \
-    cugraph=0.8 \
-    python=3.7 \
-    cudatoolkit=10.0 \
-    # dask wrappers
-    && conda install --yes --freeze-installed \
-    -c rapidsai \
-    dask-cuda=0.8.0 \
-    dask-cudf=0.8.0 \
+    cudf=${RAPIDS_CONDA_VERSION_SPEC} \
+    cuml=${RAPIDS_CONDA_VERSION_SPEC} \
+    cugraph=${RAPIDS_CONDA_VERSION_SPEC} \
+    python=${PYTHON_VERSION} \
+    cudatoolkit=${CUDA_VERSION} \
+    dask-cuda=${RAPIDS_CONDA_VERSION_SPEC} \
+    dask-cudf=${RAPIDS_CONDA_VERSION_SPEC} \
+    xgboost=${XGBOOST_VERSION} \
+    dask-xgboost=${DASK_XGBOOST_CONDA_VERSION_SPEC} \
     # cleanup   
     && conda clean -tipsy \
     && find /opt/conda/ -type f,l -name '*.a' -delete \
@@ -146,16 +167,28 @@ WORKDIR $HOME
 # Correct permissions
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
-RUN conda install --quiet --yes \
+RUN conda install  --yes --freeze-installed \
+    -c nvidia -c rapidsai -c numba -c conda-forge -c pytorch -c defaults \
     'notebook=6.0.0' \
     'jupyterhub=1.0.0' \
-    'jupyterlab=1.0.4' && \
-    conda clean --all -f -y && \
+    'jupyterlab=1.0.4' \
+    bokeh \
+    dask-labextension \
+    ipython=${IPYTHON_VERSION} \     
+    matplotlib \
+    networkx \
+    nodejs \
+    scikit-learn \
+    scipy \
+    seaborn \
+    && conda clean -afy \
+    && chmod -R ugo+w /opt/conda \
+    && jupyter labextension install dask-labextension \
+    && conda clean --all -f -y && \
     npm cache clean --force && \
     jupyter notebook --generate-config && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
     rm -rf /home/$NB_USER/.cache/yarn
-
 
 #USER root
 
